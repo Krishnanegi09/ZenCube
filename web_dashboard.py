@@ -19,37 +19,116 @@ import shutil
 import uuid
 import shlex
 from pathlib import Path
-from code_analyzer import CodeAnalyzer
-from platform_utils import (
-    IS_WINDOWS, IS_MACOS, IS_UNIX,
-    find_sandbox as platform_find_sandbox,
-    remove_quarantine_if_needed as platform_remove_quarantine,
-    get_executable_extension,
-    make_executable
-)
 
-app = Flask(__name__, template_folder='templates', static_folder='static')
-app.config['SECRET_KEY'] = 'zencube-secret-key-2025'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+# Import code_analyzer with error handling
+try:
+    from code_analyzer import CodeAnalyzer
+except ImportError as e:
+    print(f"Warning: Could not import CodeAnalyzer: {e}")
+    # Create a minimal fallback analyzer
+    class CodeAnalyzer:
+        def analyze_file(self, file_path):
+            return {
+                'error': 'Code analysis unavailable',
+                'total_issues': 0,
+                'critical': 0,
+                'high': 0,
+                'medium': 0,
+                'vulnerabilities': [],
+                'warnings': []
+            }
+
+# Import platform utilities with error handling for Vercel
+try:
+    from platform_utils import (
+        IS_WINDOWS, IS_MACOS, IS_UNIX,
+        find_sandbox as platform_find_sandbox,
+        remove_quarantine_if_needed as platform_remove_quarantine,
+        get_executable_extension,
+        make_executable
+    )
+except ImportError:
+    # Fallback if platform_utils is not available (shouldn't happen, but safe)
+    import platform
+    IS_WINDOWS = platform.system() == "Windows"
+    IS_MACOS = platform.system() == "Darwin"
+    IS_UNIX = os.name != "nt"
+    
+    def platform_find_sandbox():
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        paths = [
+            os.path.join(script_dir, "sandbox"),
+            os.path.join(script_dir, "sandbox.exe"),
+        ]
+        for path in paths:
+            if os.path.exists(path):
+                return path
+        return None
+    
+    def platform_remove_quarantine_if_needed(file_path):
+        pass  # No-op
+    
+    def get_executable_extension():
+        return ".exe" if IS_WINDOWS else ""
+    
+    def make_executable(file_path):
+        if IS_UNIX:
+            os.chmod(file_path, 0o755)
+
+# Initialize Flask app with error handling
+try:
+    app = Flask(__name__, template_folder='templates', static_folder='static')
+    app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'zencube-secret-key-2025')
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+except Exception as e:
+    print(f"Error initializing Flask app: {e}")
+    raise
 # Configure SocketIO for Vercel compatibility (use polling as fallback)
-socketio = SocketIO(
-    app, 
-    cors_allowed_origins="*", 
-    async_mode='threading',
-    allow_upgrades=True,
-    transports=['polling', 'websocket']
-)
+# On Vercel serverless, SocketIO may have limited functionality
+try:
+    socketio = SocketIO(
+        app, 
+        cors_allowed_origins="*", 
+        async_mode='threading',
+        allow_upgrades=True,
+        transports=['polling', 'websocket'],
+        logger=not os.environ.get('VERCEL'),
+        engineio_logger=not os.environ.get('VERCEL')
+    )
+except Exception as e:
+    print(f"Warning: SocketIO initialization issue: {e}")
+    # Fallback for serverless environments
+    socketio = SocketIO(
+        app, 
+        cors_allowed_origins="*",
+        async_mode='threading',
+        logger=False,
+        engineio_logger=False
+    )
 
 # Global state
 running_processes = {}
 monitoring_threads = {}
-# Use /tmp on Vercel (read-only filesystem), otherwise use 'uploads'
-UPLOAD_DIR = Path('/tmp/zencube_uploads' if os.environ.get('VERCEL') else 'uploads')
+# Use /tmp on Vercel (serverless environment), otherwise use 'uploads'
+# On Vercel, /tmp is the only writable directory
+try:
+    if os.environ.get('VERCEL'):
+        UPLOAD_DIR = Path('/tmp/zencube_uploads')
+    else:
+        UPLOAD_DIR = Path('uploads')
+except Exception as e:
+    print(f"Warning: Could not set UPLOAD_DIR: {e}")
+    UPLOAD_DIR = Path('/tmp' if os.environ.get('VERCEL') else 'uploads')
 
 
 def ensure_upload_dir():
     """Ensure the uploads directory exists"""
-    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        # On Vercel, /tmp might not allow directory creation, use tempfile instead
+        if os.environ.get('VERCEL'):
+            print(f"Warning: Could not create upload dir: {e}")
 
 
 def is_within_uploads(path: Path) -> bool:
@@ -286,14 +365,20 @@ def monitor_process(pid, process_id):
                     'timestamp': time.time()
                 }
                 
-                socketio.emit('resource_update', stats)
+                try:
+                    socketio.emit('resource_update', stats)
+                except Exception:
+                    pass  # SocketIO may not work in serverless, continue silently
                 time.sleep(0.5)  # Update every 500ms
                 
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 break
                 
     except Exception as e:
-        socketio.emit('error', {'message': f'Monitoring error: {str(e)}'})
+        try:
+            socketio.emit('error', {'message': f'Monitoring error: {str(e)}'})
+        except Exception:
+            pass  # SocketIO may not work in serverless
     finally:
         if process_id in monitoring_threads:
             del monitoring_threads[process_id]
@@ -304,13 +389,19 @@ def stream_process_output(proc, process_id):
     output_lines = []
     try:
         for line in proc.stdout:
-            socketio.emit('output', {
-                'process_id': process_id,
-                'line': line.rstrip('\n')
-            })
+            try:
+                socketio.emit('output', {
+                    'process_id': process_id,
+                    'line': line.rstrip('\n')
+                })
+            except Exception:
+                pass  # SocketIO may not work in serverless
             output_lines.append(line)
     except Exception as e:
-        socketio.emit('error', {'message': f'Output stream error: {str(e)}'})
+        try:
+            socketio.emit('error', {'message': f'Output stream error: {str(e)}'})
+        except Exception:
+            pass  # SocketIO may not work in serverless
     finally:
         if proc.stdout:
             try:
@@ -321,11 +412,14 @@ def stream_process_output(proc, process_id):
     return_code = proc.wait()
     output = ''.join(output_lines)
 
-    socketio.emit('process_complete', {
-        'process_id': process_id,
-        'return_code': return_code,
-        'output': output
-    })
+    try:
+        socketio.emit('process_complete', {
+            'process_id': process_id,
+            'return_code': return_code,
+            'output': output
+        })
+    except Exception:
+        pass  # SocketIO may not work in serverless
 
     cleanup_process_resources(process_id)
 
@@ -520,7 +614,15 @@ def handle_send_input(data):
             stdin.write(text)
         stdin.flush()
     except Exception as e:
-        socketio.emit('error', {'message': f'Failed to send input: {str(e)}'})
+        try:
+            socketio.emit('error', {'message': f'Failed to send input: {str(e)}'})
+        except Exception:
+            pass  # SocketIO may not work in serverless
+
+# Export app for Vercel serverless function
+# Vercel's @vercel/python will automatically detect the Flask app
+# Both 'app' and 'handler' are available for compatibility
+handler = app
 
 if __name__ == '__main__':
     # Create templates directory if it doesn't exist
@@ -531,7 +633,7 @@ if __name__ == '__main__':
     # Check if running on Vercel
     if os.environ.get('VERCEL'):
         print("🌐 Running on Vercel")
-        # Vercel handles the server
+        # Vercel handles the server - app is already exported as 'handler'
     else:
         print("🚀 Starting ZenCube Web Dashboard...")
         print("📊 Server will be available at:")

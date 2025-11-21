@@ -9,8 +9,14 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "web_dashboard.py"
+      "dest": "/web_dashboard.py"
     }
-  ]
+  ],
+  "functions": {
+    "web_dashboard.py": {
+      "includeFiles": "templates/**",
+      "maxDuration": 60
+    }
+  }
 }
 
