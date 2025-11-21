@@ -11,30 +11,10 @@ import platform
 import time
 import argparse
 import webbrowser
-
-def remove_quarantine_if_needed(file_path):
-    """Remove macOS quarantine attribute if present (on macOS only)"""
-    if platform.system() != "Darwin":
-        return
-    try:
-        # Check if quarantine attribute exists
-        result = subprocess.run(
-            ["xattr", "-l", file_path],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
-        if "com.apple.quarantine" in result.stdout:
-            # Remove quarantine attribute
-            subprocess.run(
-                ["xattr", "-d", "com.apple.quarantine", file_path],
-                capture_output=True,
-                timeout=5
-            )
-            print(f"🔓 Removed macOS quarantine from {file_path}")
-    except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.CalledProcessError):
-        # Silently fail if xattr doesn't exist or can't remove
-        pass
+from platform_utils import (
+    remove_quarantine_if_needed,
+    find_sandbox as platform_find_sandbox
+)
 
 def check_and_install_dependencies():
     """Check and install Python dependencies"""
@@ -59,6 +39,14 @@ def check_and_install_dependencies():
 
 def check_and_build_sandbox():
     """Check and build sandbox if needed"""
+    # Use universal platform detection
+    sandbox_path = platform_find_sandbox()
+    if sandbox_path:
+        remove_quarantine_if_needed(sandbox_path)
+        print(f"✅ Sandbox found: {sandbox_path}")
+        return True
+    
+    # Fallback to common paths
     sandbox_paths = [
         "./sandbox",
         "./build/sandbox",

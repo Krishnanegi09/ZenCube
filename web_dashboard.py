@@ -20,6 +20,13 @@ import uuid
 import shlex
 from pathlib import Path
 from code_analyzer import CodeAnalyzer
+from platform_utils import (
+    IS_WINDOWS, IS_MACOS, IS_UNIX,
+    find_sandbox as platform_find_sandbox,
+    remove_quarantine_if_needed as platform_remove_quarantine,
+    get_executable_extension,
+    make_executable
+)
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['SECRET_KEY'] = 'zencube-secret-key-2025'
@@ -104,13 +111,13 @@ def build_execution_command(file_path: Path):
     ext = file_path.suffix.lower()
 
     interpreter_map = {
-        '.py': ['python3'] if os.name != 'nt' else ['python'],
+        '.py': ['python3'] if IS_UNIX else ['python'],
         '.sh': ['bash'],
         '.js': ['node'],
         '.rb': ['ruby'],
         '.pl': ['perl'],
-        '.ps1': ['pwsh'] if os.name != 'nt' else ['powershell'],
-        '.bat': ['cmd.exe', '/c'] if os.name == 'nt' else None,
+        '.ps1': ['pwsh'] if IS_UNIX else ['powershell'],
+        '.bat': ['cmd.exe', '/c'] if IS_WINDOWS else None,
     }
 
     # Allow executables
@@ -123,33 +130,31 @@ def build_execution_command(file_path: Path):
             raise RuntimeError(f"Required interpreter '{interpreter_cmd[0]}' not found on PATH.")
         return interpreter_cmd + [str(file_path)], cleanup_paths
 
-    if ext in ('.c',):
+        if ext in ('.c',):
         ensure_upload_dir()
         build_dir = UPLOAD_DIR / f"build_{uuid.uuid4().hex}"
         build_dir.mkdir(parents=True, exist_ok=True)
-        output_name = file_path.stem + ('.exe' if os.name == 'nt' else '')
+        output_name = file_path.stem + get_executable_extension()
         output_path = build_dir / output_name
         compile_cmd = ['gcc', str(file_path), '-o', str(output_path)]
         result = subprocess.run(compile_cmd, capture_output=True, text=True, timeout=60)
         if result.returncode != 0:
             raise RuntimeError(f"C compilation failed:\n{result.stderr or result.stdout}")
-        if os.name != 'nt':
-            os.chmod(output_path, 0o755)
+        make_executable(str(output_path))
         cleanup_paths.append(str(build_dir))
         return [str(output_path)], cleanup_paths
 
-    if ext in ('.cpp', '.cc', '.cxx'):
+        if ext in ('.cpp', '.cc', '.cxx'):
         ensure_upload_dir()
         build_dir = UPLOAD_DIR / f"build_{uuid.uuid4().hex}"
         build_dir.mkdir(parents=True, exist_ok=True)
-        output_name = file_path.stem + ('.exe' if os.name == 'nt' else '')
+        output_name = file_path.stem + get_executable_extension()
         output_path = build_dir / output_name
         compile_cmd = ['g++', str(file_path), '-o', str(output_path)]
         result = subprocess.run(compile_cmd, capture_output=True, text=True, timeout=60)
         if result.returncode != 0:
             raise RuntimeError(f"C++ compilation failed:\n{result.stderr or result.stdout}")
-        if os.name != 'nt':
-            os.chmod(output_path, 0o755)
+        make_executable(str(output_path))
         cleanup_paths.append(str(build_dir))
         return [str(output_path)], cleanup_paths
 
@@ -245,40 +250,11 @@ def launch_sandbox_process(command_parts, limits, metadata):
     return process_id, proc.pid
 
 def find_sandbox():
-    """Find sandbox executable"""
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    paths = [
-        os.path.join(script_dir, "sandbox"),
-        os.path.join(script_dir, "sandbox.exe"),
-        os.path.join(script_dir, "build", "sandbox"),
-        os.path.join(script_dir, "build", "Release", "sandbox.exe"),
-        "./sandbox",
-        "./sandbox.exe"
-    ]
-    
-    # Helper to remove macOS quarantine if needed
-    def remove_quarantine_if_needed(file_path):
-        if platform.system() == "Darwin":
-            try:
-                subprocess.run(
-                    ["xattr", "-d", "com.apple.quarantine", file_path],
-                    capture_output=True,
-                    timeout=5,
-                    check=False
-                )
-            except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.CalledProcessError):
-                pass  # Silently fail if can't remove
-    
-    for path in paths:
-        full_path = os.path.abspath(path)
-        if os.path.exists(full_path):
-            if os.name != 'nt':
-                if os.access(full_path, os.X_OK):
-                    remove_quarantine_if_needed(full_path)
-                    return full_path
-            else:
-                return full_path
-    return None
+    """Find sandbox executable - uses universal platform detection"""
+    sandbox_path = platform_find_sandbox()
+    if sandbox_path:
+        platform_remove_quarantine(sandbox_path)
+    return sandbox_path
 
 def monitor_process(pid, process_id):
     """Monitor a process and send updates via WebSocket"""
@@ -292,6 +268,7 @@ def monitor_process(pid, process_id):
                 memory_info = proc.memory_info()
                 memory_mb = memory_info.rss / 1024 / 1024
                 # Use vms instead of vss - vms is available on macOS/Linux, vss is not standard
+                # On Windows, use rss as fallback
                 virtual_mb = getattr(memory_info, 'vms', memory_info.rss) / 1024 / 1024
                 num_threads = proc.num_threads()
                 num_fds = len(proc.open_files()) if hasattr(proc, 'open_files') else 0

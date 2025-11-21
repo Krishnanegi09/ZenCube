@@ -20,6 +20,37 @@
             --warning: #ffce5c;
             --text-primary: #f1f3ff;
             --text-muted: #94a3c6;
+            --input-bg: rgba(15, 18, 28, 0.9);
+            --input-border: rgba(127, 140, 255, 0.18);
+            --limit-bg: rgba(14, 16, 24, 0.9);
+            --terminal-bg: rgba(10, 11, 17, 0.95);
+            --code-bg: rgba(8, 10, 18, 0.9);
+            --scrollbar-thumb: rgba(127, 140, 255, 0.25);
+            --shadow-color: rgba(4, 6, 15, 0.45);
+            --shadow-card: rgba(8, 10, 20, 0.55);
+        }
+
+        [data-theme="light"] {
+            color-scheme: light;
+            --bg-gradient: radial-gradient(circle at top left, #f8f9fa 0%, #e9ecef 40%, #ffffff 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-border: rgba(127, 140, 255, 0.2);
+            --accent: #5663ff;
+            --accent-strong: #4c56d4;
+            --accent-soft: rgba(86, 99, 255, 0.1);
+            --success: #28a745;
+            --error: #dc3545;
+            --warning: #ffc107;
+            --text-primary: #212529;
+            --text-muted: #6c757d;
+            --input-bg: rgba(248, 249, 250, 0.9);
+            --input-border: rgba(127, 140, 255, 0.3);
+            --limit-bg: rgba(248, 249, 250, 0.9);
+            --terminal-bg: rgba(248, 249, 250, 0.98);
+            --code-bg: rgba(248, 249, 250, 0.95);
+            --scrollbar-thumb: rgba(127, 140, 255, 0.4);
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --shadow-card: rgba(0, 0, 0, 0.15);
         }
 
         * {
@@ -82,7 +113,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
-            box-shadow: 0 20px 35px rgba(4, 6, 15, 0.45);
+            box-shadow: 0 20px 35px var(--shadow-color);
         }
 
         .stat-card .label {
@@ -114,7 +145,7 @@
         }
 
         .col::-webkit-scrollbar-thumb {
-            background: rgba(127, 140, 255, 0.25);
+            background: var(--scrollbar-thumb);
             border-radius: 8px;
         }
 
@@ -127,7 +158,7 @@
             border: 1px solid var(--card-border);
             border-radius: 18px;
             padding: 24px;
-            box-shadow: 0 25px 40px rgba(8, 10, 20, 0.55);
+            box-shadow: 0 25px 40px var(--shadow-card);
         }
 
         .card h2 {
@@ -169,8 +200,8 @@
 
         .form-group input[type="text"],
         .form-group input[type="number"] {
-            background: rgba(15, 18, 28, 0.9);
-            border: 1px solid rgba(127, 140, 255, 0.18);
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
             border-radius: 12px;
             padding: 10px 14px;
             color: var(--text-primary);
@@ -195,8 +226,8 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            background: rgba(14, 16, 24, 0.9);
-            border: 1px solid rgba(127, 140, 255, 0.12);
+            background: var(--limit-bg);
+            border: 1px solid var(--card-border);
             border-radius: 12px;
             padding: 10px 12px;
         }
@@ -292,10 +323,10 @@
         .tag.total { background: rgba(127, 140, 255, 0.18); color: var(--accent); }
 
         .analysis-item {
-            border: 1px solid rgba(127, 140, 255, 0.15);
+            border: 1px solid var(--card-border);
             border-radius: 12px;
             padding: 12px 14px;
-            background: rgba(14, 16, 24, 0.9);
+            background: var(--limit-bg);
         }
 
         .analysis-item .title {
@@ -312,10 +343,10 @@
         .analysis-item pre {
             margin: 0;
             font-size: 13px;
-            background: rgba(8, 10, 18, 0.9);
+            background: var(--code-bg);
             border-radius: 10px;
             padding: 8px 10px;
-            color: #d7daff;
+            color: var(--text-primary);
             overflow-x: auto;
         }
 
@@ -334,8 +365,8 @@
         }
 
         .terminal-output {
-            background: rgba(10, 11, 17, 0.95);
-            border: 1px solid rgba(127, 140, 255, 0.18);
+            background: var(--terminal-bg);
+            border: 1px solid var(--card-border);
             border-radius: 14px;
             padding: 18px;
             font-family: "Fira Mono", "SFMono-Regular", Consolas, monospace;
@@ -346,6 +377,7 @@
             overflow-y: auto;
             white-space: pre-wrap;
             word-break: break-word;
+            color: var(--text-primary);
         }
 
         .terminal-line { margin-bottom: 4px; }
@@ -358,8 +390,8 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            background: rgba(14, 16, 24, 0.9);
-            border: 1px solid rgba(127, 140, 255, 0.15);
+            background: var(--limit-bg);
+            border: 1px solid var(--card-border);
             border-radius: 12px;
             padding: 10px 12px;
             font-family: "Fira Mono", monospace;
@@ -404,7 +436,7 @@
 
         .analysis-card::-webkit-scrollbar-thumb,
         .terminal-output::-webkit-scrollbar-thumb {
-            background: rgba(127, 140, 255, 0.25);
+            background: var(--scrollbar-thumb);
             border-radius: 8px;
         }
 
@@ -419,19 +451,35 @@
             height: 100%;
         }
 
-        .terminal-output {
-            background: rgba(10, 11, 17, 0.95);
-            border: 1px solid rgba(127, 140, 255, 0.18);
-            border-radius: 14px;
-            padding: 18px;
-            font-family: "Fira Mono", "SFMono-Regular", Consolas, monospace;
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-size: 14px;
-            flex: 1;
-            min-height: 280px;
-            max-height: 60vh;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            word-break: break-word;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px var(--shadow-color);
+        }
+
+        .theme-toggle svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
         }
 
         @media (max-width: 1060px) {
@@ -446,11 +494,28 @@
             .terminal-output { min-height: 220px; }
             .actions { flex-direction: column; }
             button.primary, button.secondary { width: 100%; }
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            .theme-toggle span {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
     <div class="page">
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+            <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <!-- Moon icon for dark mode (default) -->
+                <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clip-rule="evenodd" />
+            </svg>
+            <span id="themeText">Dark Mode</span>
+        </button>
+
         <header class="hero">
             <h1>🧊 ZenCube Command Center</h1>
             <p>Upload or point to any program on your system, scan it for vulnerabilities, and execute it securely inside the ZenCube sandbox with live telemetry and an interactive terminal.</p>
@@ -551,6 +616,76 @@
     </div>
 
     <script>
+        // Theme management
+        function getStoredTheme() {
+            return localStorage.getItem('zencube-theme') || 'dark';
+        }
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('zencube-theme', theme);
+            updateThemeIcon(theme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (theme === 'light') {
+                // Sun icon for light mode
+                icon.innerHTML = '<path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/>';
+                text.textContent = 'Light Mode';
+            } else {
+                // Moon icon for dark mode
+                icon.innerHTML = '<path d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" fill-rule="evenodd" clip-rule="evenodd" />';
+                text.textContent = 'Dark Mode';
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+            // Update chart colors
+            if (typeof resourceChart !== 'undefined') {
+                updateChartColors(newTheme);
+            }
+        }
+
+        function updateChartColors(theme) {
+            const isLight = theme === 'light';
+            const textMuted = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+            const cardBorder = getComputedStyle(document.documentElement).getPropertyValue('--card-border').trim();
+            const textPrimary = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+            const colors = getChartColors();
+            
+            // Update dataset colors
+            resourceChart.data.datasets[0].borderColor = colors.cpu;
+            resourceChart.data.datasets[0].backgroundColor = colors.cpuBg;
+            resourceChart.data.datasets[1].borderColor = colors.memory;
+            resourceChart.data.datasets[1].backgroundColor = colors.memoryBg;
+            
+            // Update scales
+            resourceChart.options.scales.x.ticks.color = textMuted;
+            resourceChart.options.scales.x.grid.color = cardBorder;
+            resourceChart.options.scales.y.ticks.color = textMuted;
+            resourceChart.options.scales.y.grid.color = cardBorder;
+            resourceChart.options.scales.y1.ticks.color = textMuted;
+            resourceChart.options.plugins.legend.labels.color = textPrimary;
+            resourceChart.update('none');
+        }
+
+        // Initialize theme on page load
+        (function() {
+            const theme = getStoredTheme();
+            setTheme(theme);
+            // Update chart after initialization
+            setTimeout(() => {
+                if (typeof resourceChart !== 'undefined') {
+                    updateChartColors(theme);
+                }
+            }, 100);
+        })();
+
         // Configure SocketIO for Vercel (use polling instead of WebSocket)
         const socket = io({
             transports: ['polling', 'websocket'],
@@ -587,6 +722,18 @@
             memory: []
         };
 
+        // Get current theme for chart colors
+        function getChartColors() {
+            const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+            const isLight = theme === 'light';
+            return {
+                cpu: isLight ? 'rgba(86, 99, 255, 0.9)' : 'rgba(127, 140, 255, 0.95)',
+                cpuBg: isLight ? 'rgba(86, 99, 255, 0.15)' : 'rgba(127, 140, 255, 0.1)',
+                memory: isLight ? 'rgba(40, 167, 69, 0.9)' : 'rgba(86, 227, 175, 0.9)',
+                memoryBg: isLight ? 'rgba(40, 167, 69, 0.12)' : 'rgba(86, 227, 175, 0.08)'
+            };
+        }
+
         const resourceChart = new Chart(chartCtx, {
             type: 'line',
             data: {
@@ -595,16 +742,16 @@
                     {
                         label: 'CPU %',
                         data: chartData.cpu,
-                        borderColor: 'rgba(127, 140, 255, 0.95)',
-                        backgroundColor: 'rgba(127, 140, 255, 0.1)',
+                        borderColor: getChartColors().cpu,
+                        backgroundColor: getChartColors().cpuBg,
                         tension: 0.35,
                         pointRadius: 0
                     },
                     {
                         label: 'Memory (MB)',
                         data: chartData.memory,
-                        borderColor: 'rgba(86, 227, 175, 0.9)',
-                        backgroundColor: 'rgba(86, 227, 175, 0.08)',
+                        borderColor: getChartColors().memory,
+                        backgroundColor: getChartColors().memoryBg,
                         tension: 0.35,
                         pointRadius: 0,
                         yAxisID: 'y1'
@@ -618,7 +765,7 @@
                     x: {
                         display: true,
                         ticks: { 
-                            color: 'rgba(180, 190, 230, 0.8)',
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || 'rgba(180, 190, 230, 0.8)',
                             maxRotation: 45,
                             minRotation: 45,
                             maxTicksLimit: 12,
@@ -628,25 +775,35 @@
                             }
                         },
                         grid: { 
-                            color: 'rgba(127, 140, 255, 0.08)',
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--card-border').trim() || 'rgba(127, 140, 255, 0.08)',
                             drawOnChartArea: true
                         }
                     },
                     y: {
                         beginAtZero: true,
                         max: 100,
-                        ticks: { color: 'rgba(180, 190, 230, 0.6)' },
-                        grid: { color: 'rgba(127, 140, 255, 0.08)' }
+                        ticks: { 
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || 'rgba(180, 190, 230, 0.6)'
+                        },
+                        grid: { 
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--card-border').trim() || 'rgba(127, 140, 255, 0.08)'
+                        }
                     },
                     y1: {
                         beginAtZero: true,
                         position: 'right',
-                        ticks: { color: 'rgba(180, 190, 230, 0.6)' },
+                        ticks: { 
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || 'rgba(180, 190, 230, 0.6)'
+                        },
                         grid: { drawOnChartArea: false }
                     }
                 },
                 plugins: {
-                    legend: { labels: { color: 'rgba(200, 210, 240, 0.75)' } }
+                    legend: { 
+                        labels: { 
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || 'rgba(200, 210, 240, 0.75)'
+                        } 
+                    }
                 },
                 layout: {
                     padding: {

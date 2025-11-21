@@ -10,28 +10,7 @@ import os
 import json
 import subprocess
 from code_analyzer import CodeAnalyzer
-
-def find_sandbox():
-    """Find sandbox executable"""
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    paths = [
-        os.path.join(script_dir, "sandbox"),
-        os.path.join(script_dir, "sandbox.exe"),
-        os.path.join(script_dir, "build", "sandbox"),
-        os.path.join(script_dir, "build", "Release", "sandbox.exe"),
-        "./sandbox",
-        "./sandbox.exe"
-    ]
-    
-    for path in paths:
-        full_path = os.path.abspath(path)
-        if os.path.exists(full_path):
-            if os.name != 'nt':
-                if os.access(full_path, os.X_OK):
-                    return full_path
-            else:
-                return full_path
-    return None
+from platform_utils import find_sandbox
 
 def analyze_command(args):
     """Analyze code for vulnerabilities"""

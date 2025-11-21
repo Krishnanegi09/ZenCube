@@ -12,6 +12,11 @@ import os
 import platform
 import shlex
 from code_analyzer import CodeAnalyzer
+from platform_utils import (
+    IS_WINDOWS, IS_UNIX,
+    find_sandbox as platform_find_sandbox,
+    is_executable_file
+)
 
 class SandboxTestGUI:
     def __init__(self, root):
@@ -125,29 +130,8 @@ class SandboxTestGUI:
         )
 
     def find_sandbox(self):
-        """Find the sandbox executable"""
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        
-        # Check common locations
-        paths_to_check = [
-            os.path.join(script_dir, "sandbox"),
-            os.path.join(script_dir, "sandbox.exe"),
-            os.path.join(script_dir, "build", "sandbox"),
-            os.path.join(script_dir, "build", "Release", "sandbox.exe"),
-            "./sandbox",
-            "./sandbox.exe"
-        ]
-        
-        for path in paths_to_check:
-            full_path = os.path.abspath(path)
-            if os.path.exists(full_path):
-                if platform.system() != "Windows":
-                    if os.access(full_path, os.X_OK):
-                        return full_path
-                else:
-                    return full_path
-        
-        return None
+        """Find the sandbox executable - uses universal platform detection"""
+        return platform_find_sandbox()
     
     def create_widgets(self):
         """Create all GUI widgets"""
@@ -570,8 +554,7 @@ class SandboxTestGUI:
             # Direct executable - check if it's executable
             if not os.path.exists(exec_file):
                 raise ValueError(f"Executable file not found: {exec_file}")
-            if not os.access(exec_file, os.X_OK) and platform.system() != "Windows":
-                # On Unix, check if it's executable
+            if not is_executable_file(exec_file):
                 raise ValueError(f"File is not executable: {exec_file}")
             cmd.append(exec_file)
         
@@ -856,8 +839,8 @@ class SandboxTestGUI:
             import select
             import time
             
-            # For Unix-like systems (macOS, Linux)
-            if hasattr(select, 'select'):
+            # For Unix-like systems (macOS, Linux) - use select module
+            if IS_UNIX and hasattr(select, 'select'):
                 start_time = time.time()
                 timeout_seconds = 30  # Timeout for programs waiting for input
                 
